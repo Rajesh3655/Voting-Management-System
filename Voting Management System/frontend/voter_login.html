@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Voter Login | Voting Management System</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    form {
+      background: white;
+      padding: 40px 30px;
+      border-radius: 10px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      width: 320px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 25px;
+      color: #182848;
+    }
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      background-color: #4b6cb7;
+      color: white;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #395092;
+    }
+    .footer-text {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    .footer-text a {
+      color: #4b6cb7;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .footer-text a:hover {
+      text-decoration: underline;
+    }
+  </style>
+
+  <!-- SweetAlert2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+</head>
+<body>
+  <form id="voterLoginForm">
+    <h2>Voter Login</h2>
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button type="submit">Login</button>
+
+    <div class="footer-text">
+      <br>New user? <a href="signup.html">Create an account</a>
+    </div>
+  </form>
+
+  <!-- SweetAlert2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer);
+      toast.addEventListener('mouseleave', Swal.resumeTimer);
+    }
+  });
+
+  document.getElementById('voterLoginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    try {
+      const response = await fetch('http://localhost:5000/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 403) {
+        Toast.fire({
+          icon: 'warning',
+          title: data.message || 'Your account is pending approval by admin.'
+        });
+      } else if (response.ok) {
+        const user = data.user;
+        if (user && user.role === 'voter') {
+          Toast.fire({
+            icon: 'success',
+            title: 'Login successful!'
+          });
+
+          setTimeout(() => {
+            // ✅ Proper structure for localStorage
+            localStorage.setItem('voter', JSON.stringify({
+              user: {
+                id: user.id,
+                email: user.email,
+                role: user.role
+              }
+            }));
+
+            window.location.href = "voter.html";
+          }, 1500);
+        } else {
+          Toast.fire({
+            icon: 'error',
+            title: 'Access denied. Only voters can log in here.'
+          });
+        }
+      } else {
+        Toast.fire({
+          icon: 'error',
+          title: data.message || 'Login failed'
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      Toast.fire({
+        icon: 'error',
+        title: 'An error occurred during login. Please try again later.'
+      });
+    }
+  });
+</script>
+
+</body>
+</html>

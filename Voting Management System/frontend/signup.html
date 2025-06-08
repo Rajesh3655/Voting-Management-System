@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Signup | Voting System</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    form {
+      background: #fff;
+      padding: 35px 30px;
+      border-radius: 10px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      width: 350px;
+      text-align: center;
+    }
+
+    h2 {
+      color: black;
+      margin-bottom: 25px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #4b6cb7;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0c7c70;
+    }
+  </style>
+
+  <!-- SweetAlert2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+</head>
+<body>
+  <form onsubmit="signup(event)">
+    <h2>Create Account</h2>
+      <input id="name" type="text" placeholder="Name" required />
+    <input id="email" type="email" placeholder="Email" required />
+    <input id="password" type="password" placeholder="Password" required />
+    <input id="phone" type="tel" placeholder="Phone Number" required />
+      <input id="age" type="number" placeholder="Age" min="18" max="120" required />
+
+    <button type="submit">Signup</button>
+  </form>
+
+  <!-- SweetAlert2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    async function signup(e) {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const name = document.getElementById('name').value.trim();
+      const age = document.getElementById('age').value.trim();
+
+      if (!email || !password || !phone || !name || !age) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Oops...',
+          text: 'Please fill in all fields.',
+          toast: true,
+          position: 'top-end',
+          timer: 3000,
+          showConfirmButton: false,
+          timerProgressBar: true,
+        });
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:5000/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password, phone,  name ,age}),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Show success toast
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: data.message || 'Signup successful.',
+            timer: 2000,
+            showConfirmButton: false,
+            timerProgressBar: true,
+            toast: true,
+            position: 'top-end'
+          });
+
+          // Redirect after delay
+          setTimeout(() => {
+            localStorage.setItem('user', JSON.stringify(data.user)); // Save user data if needed
+            location.href = 'index.html'; // redirect to login page
+          }, 2100);
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.message || 'Signup failed.',
+            toast: true,
+            position: 'top-end',
+            timer: 3000,
+            showConfirmButton: false,
+            timerProgressBar: true,
+          });
+        }
+      } catch (error) {
+        console.error('Error during signup:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Error connecting to server.',
+          toast: true,
+          position: 'top-end',
+          timer: 3000,
+          showConfirmButton: false,
+          timerProgressBar: true,
+        });
+      }
+    }
+  </script>
+</body>
+</html>
