@@ -9,7 +9,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo import ASCENDING
 
 
+app = Flask(__name__, static_folder="frontend", static_url_path="/")
 
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
 
 #
 #
