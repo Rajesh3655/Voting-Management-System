@@ -1,0 +1,290 @@
+<!-- Paste this into your voter.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Voter Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!Developed by Rajesh K>
+    <!contact: Rajesh3656r@gmail.com || 8217354109>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f2f4f8;
+      color: #333;
+    }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    header h1 { margin: 0; font-size: 28px; }
+    #logout-btn {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      background: #c0392b;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
+    }
+    h2 {
+      color: #2c3e50;
+      margin-top: 40px;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 5px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: scale(1.01); }
+    .card h3 { margin-top: 0; }
+    .election-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .vote-btn {
+      margin-top: 10px;
+      background: #2980b9;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .vote-btn:hover { background: #1c5980; }
+    .vote-btn[disabled] {
+      background: #e74c3c;
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+    .candidate-option {
+      margin-top: 10px;
+      text-align: left;
+    }
+    .candidate-option input {
+      margin-right: 10px;
+    }
+    .voted-election {
+      border: 2px solid #e74c3c;
+      background-color: #ffe6e6;
+    }
+    @media (max-width: 600px) {
+      .card { padding: 15px; }
+      header h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Welcome, Voter</h1>
+      <button id="logout-btn" onclick="goBack()">Log out</button>
+  </header>
+
+  <div class="container">
+    <section>
+      <h2>Your Details</h2>
+      <div id="voter-info" class="card">Loading...</div>
+    </section>
+
+    <section>
+      <h2>Live Elections</h2>
+      <div id="live-elections" class="election-grid">Loading...</div>
+    </section>
+
+    <section>
+      <h2>Upcoming Elections</h2>
+      <div id="upcoming-elections" class="election-grid">Loading...</div>
+    </section>
+
+    <section>
+      <h2>Ended Elections</h2>
+      <div id="ended-elections" class="election-grid">Loading...</div>
+    </section>
+  </div>
+
+  <script>
+    let voter = JSON.parse(localStorage.getItem("voter"))?.user;
+
+    if (!voter) {
+      alert("Voter not logged in. Redirecting to login.");
+      window.location.href = "voter_login.html";
+    }
+
+    document.getElementById("logout-btn").onclick = () => {
+      localStorage.removeItem("voter");
+      window.location.href = "index.html";
+    };
+
+    async function fetchVoterInfo() {
+      try {
+        const res = await fetch("http://localhost:5000/api/get_voter_details/fetch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: voter.email })
+        });
+
+        const data = await res.json();
+        const container = document.getElementById("voter-info");
+
+        if (res.ok && data) {
+          container.innerHTML = `
+            <h3>${data.name}</h3>
+            <p><strong>Email:</strong> ${data.email}</p>
+            <p><strong>Phone:</strong> ${data.phone}</p>
+            <p><strong>Age:</strong> ${data.age}</p>
+          `;
+          voter = data;
+          localStorage.setItem("voter", JSON.stringify({ user: data }));
+        } else {
+          container.textContent = "Failed to load voter information.";
+        }
+      } catch (err) {
+        console.error("Error fetching voter info:", err);
+        document.getElementById("voter-info").textContent = "Error loading voter data.";
+      }
+    }
+
+    async function fetchElections() {
+      try {
+        const res = await fetch("http://localhost:5000/api/elections");
+        const elections = await res.json();
+
+        const live = elections.filter(e => e.status === "live");
+        const upcoming = elections.filter(e => e.status === "upcoming");
+        const ended = elections.filter(e => e.status === "ended");
+
+        renderElections(live, "live-elections", true);
+        renderElections(upcoming, "upcoming-elections");
+        renderElections(ended, "ended-elections");
+      } catch (err) {
+        console.error("Error loading elections:", err);
+        document.getElementById("live-elections").textContent = "Error loading elections.";
+      }
+    }
+
+    function renderElections(list, containerId, isLive = false) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = "";
+
+      if (list.length === 0) {
+        container.innerHTML = "<p>No elections found.</p>";
+        return;
+      }
+
+      list.forEach(e => {
+        const voted = voter.voted?.includes(e._id);
+        const card = document.createElement("div");
+        card.className = "card";
+        if (voted) card.classList.add("voted-election");
+
+        card.innerHTML = `
+          <h3>${e.title}</h3>
+          <p><strong>Date:</strong> ${e.election_date}</p>
+          <p><strong>Time:</strong> ${e.start_time} - ${e.end_time}</p>
+        `;
+
+        if (isLive) {
+          const btn = document.createElement("button");
+          btn.textContent = voted ? "Voted" : "Vote";
+          btn.className = "vote-btn";
+          btn.disabled = voted;
+          if (!voted) {
+            btn.onclick = () => openVoteModal(e._id);
+          }
+          card.appendChild(btn);
+        }
+
+        container.appendChild(card);
+      });
+    }
+
+    async function openVoteModal(electionId) {
+      try {
+        const res = await fetch(`http://localhost:5000/api/candidates/v/${electionId}`);
+        const candidates = await res.json();
+
+        if (!candidates.length) {
+          Swal.fire("No approved candidates for this election.");
+          return;
+        }
+
+        const optionsHtml = candidates.map(c =>
+          `<div class="candidate-option">
+            <label><input type="radio" name="candidate" value="${c._id}" /> ${c.name} (${c.party})</label>
+          </div>`
+        ).join("");
+
+        const { isConfirmed, value } = await Swal.fire({
+          title: "Choose Candidate",
+          html: optionsHtml,
+          preConfirm: () => {
+            const selected = document.querySelector('input[name="candidate"]:checked');
+            if (!selected) {
+              Swal.showValidationMessage("Select a candidate to vote");
+            }
+            return selected?.value;
+          },
+          confirmButtonText: "Cast Vote",
+          showCancelButton: true
+        });
+
+        if (isConfirmed && value) {
+          castVote(electionId, value);
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire("Error", "Failed to load candidates", "error");
+      }
+    }
+
+    async function castVote(electionId, candidateId) {
+      try {
+        const res = await fetch("http://localhost:5000/api/vote/voter", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            voter_id: voter._id,
+            election_id: electionId,
+            candidate_id: candidateId
+          })
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          Swal.fire("Success", result.message, "success");
+          await fetchVoterInfo();
+          fetchElections(); // Refresh UI
+        } else {
+          Swal.fire("Error", result.message || "You may have already voted.", "error");
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire("Error", "Failed to cast vote", "error");
+      }
+    }
+
+    fetchVoterInfo().then(fetchElections);
+  </script>
+</body>
+</html>

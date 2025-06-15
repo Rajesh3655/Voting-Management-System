@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Add Candidate</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f7f9;
+      margin: 0; padding: 0;
+    }
+    .container {
+      width: 400px;
+      margin: 50px auto;
+      padding: 25px 30px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      color: #333;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #2c3e50;
+      color: white;
+      font-size: 17px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #34495e;
+    }
+    .back-btn {
+      background-color: #95a5a6;
+      margin-top: 10px;
+    }
+    .back-btn:hover {
+      background-color: #bdc3c7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Add Candidate</h2>
+
+    <label for="electionsList">Select Election</label>
+    <select id="electionsList">
+      <option disabled selected>Loading elections...</option>
+    </select>
+
+    <label for="name">Candidate Name</label>
+    <input type="text" id="name" placeholder="Candidate Name" />
+
+    <label for="party">Party Name</label>
+    <input type="text" id="party" placeholder="Party Name" />
+
+    <button onclick="addCandidate()">Add Candidate</button>
+    <button class="back-btn" onclick="goBack()">Back to Admin Panel</button>
+  </div>
+
+  <script>
+    window.onload = async function () {
+      const dropdown = document.getElementById('electionsList');
+      try {
+        const res = await fetch('http://localhost:5000/api/elections/list');
+        if (!res.ok) throw new Error('Server error while fetching elections');
+
+        const elections = await res.json();
+        console.log("Fetched elections:", elections);
+
+        if (!Array.isArray(elections) || elections.length === 0) {
+          dropdown.innerHTML = `<option disabled selected>No elections found</option>`;
+          return;
+        }
+
+        dropdown.innerHTML = `<option disabled selected value="">Select an Election</option>`;
+        elections.forEach(election => {
+          if (!election._id || !election.title) return;
+
+          const option = document.createElement('option');
+          option.value = election._id;
+          option.textContent = election.title;
+          dropdown.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Election Fetch Error:', error);
+        dropdown.innerHTML = `<option disabled selected>Failed to load elections</option>`;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Unable to load elections list',
+          toast: true,
+          position: 'top-end',
+          timer: 2500,
+          showConfirmButton: false,
+          timerProgressBar: true,
+        });
+      }
+    };
+
+    function goBack() {
+      window.location.href = 'admin.html';
+    }
+
+    async function addCandidate() {
+      const nameInput = document.getElementById('name').value.trim();
+      const partyInput = document.getElementById('party').value.trim();
+      const electionId = document.getElementById('electionsList').value;
+
+      if (!nameInput || !partyInput || !electionId) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Warning',
+          text: 'Please fill all fields',
+          toast: true,
+          position: 'top-end',
+          timer: 2000,
+          showConfirmButton: false,
+          timerProgressBar: true,
+        });
+        return;
+      }
+
+      try {
+        const existingRes = await fetch(`http://localhost:5000/api/candidates/by-election/${electionId}`);
+        if (!existingRes.ok) throw new Error('Failed to fetch existing candidates');
+
+        const existingCandidates = await existingRes.json();
+
+        const duplicate = existingCandidates.some(c =>
+          c.name.toLowerCase() === nameInput.toLowerCase() &&
+          c.party.toLowerCase() === partyInput.toLowerCase()
+        );
+
+        if (duplicate) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Duplicate',
+            text: 'This candidate already exists for the selected election',
+            toast: true,
+            position: 'top-end',
+            timer: 2500,
+            showConfirmButton: false,
+            timerProgressBar: true,
+          });
+          return;
+        }
+
+        const res = await fetch('http://localhost:5000/api/candidates/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: nameInput,
+            party: partyInput,
+            election_id: electionId
+          })
+        });
+
+        const data = await res.json();
+
+        Swal.fire({
+          icon: res.ok ? 'success' : 'error',
+          title: res.ok ? 'Success' : 'Error',
+          text: data.message || (res.ok ? 'Candidate added' : 'Failed to add candidate'),
+          toast: true,
+          position: 'top-end',
+          timer: 2500,
+          showConfirmButton: false,
+          timerProgressBar: true,
+        });
+
+        if (res.ok) {
+          document.getElementById('name').value = '';
+          document.getElementById('party').value = '';
+          setTimeout(() => {
+            window.location.href = 'admin.html';
+          }, 2500);
+        }
+
+      } catch (err) {
+        console.error("Add Candidate Error:", err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to add candidate',
+          toast: true,
+          position: 'top-end',
+          timer: 2500,
+          showConfirmButton: false,
+          timerProgressBar: true,
+        });
+      }
+    }
+  </script>
+</body>
+</html>
+

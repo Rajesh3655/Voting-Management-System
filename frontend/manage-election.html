@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Election Management</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f8;
+      padding: 40px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .election-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .election-card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .election-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .election-info {
+      font-size: 16px;
+    }
+
+    .status {
+      padding: 5px 12px;
+      border-radius: 20px;
+      color: #fff;
+      font-weight: bold;
+      text-transform: capitalize;
+    }
+
+    .upcoming { background: #3498db; }
+    .live { background: #27ae60; }
+    .ended { background: #e74c3c; }
+
+    .actions {
+      margin-top: 10px;
+    }
+
+    .actions button {
+      margin-right: 10px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .btn-live { background: #27ae60; }
+    .btn-end { background: #e74c3c; }
+
+    .back-btn {
+      margin-top: 30px;
+      align-self: flex-end;
+      background-color: #7f8c8d;
+      color: white;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 3px 6px rgba(127, 140, 141, 0.5);
+      transition: background-color 0.25s ease;
+      user-select: none;
+      margin-left: 42%;
+    }
+
+    .back-btn:hover {
+      background-color: #95a5a6;
+      box-shadow: 0 4px 10px rgba(149, 165, 166, 0.7);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Election Management</h1>
+  <div class="election-container" id="electionList"></div>
+  <button class="back-btn" onclick="goBack()">Back to Admin Panel</button>
+
+  <script>
+    const BASE_API = 'http://localhost:5000/api/elections';
+
+    async function fetchElections() {
+      try {
+        const res = await fetch(`${BASE_API}/mm`);
+        const data = await res.json();
+
+        const list = document.getElementById('electionList');
+        list.innerHTML = '';
+
+        data.forEach(election => {
+          const div = document.createElement('div');
+          div.className = 'election-card';
+
+          div.innerHTML = `
+            <div class="election-header">
+              <div class="election-info">
+                <strong>${election.title}</strong><br>
+                Position: ${election.position}<br>
+                Date: ${election.election_date}<br>
+                Time: ${election.start_time} to ${election.end_time}
+              </div>
+              <div class="status ${election.status}">${election.status}</div>
+            </div>
+            <div class="actions">
+              <button class="btn-live" onclick="updateStatus('${election._id}', 'live')">Live</button>
+              <button class="btn-end" onclick="updateStatus('${election._id}', 'ended')">End</button>
+            </div>
+          `;
+
+          list.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Error fetching elections:", err);
+        document.getElementById('electionList').innerHTML = `<div>Error loading elections.</div>`;
+      }
+    }
+
+    async function updateStatus(id, status) {
+      try {
+        const res = await fetch(`${BASE_API}/status/mm/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status })
+        });
+
+        if (res.ok) {
+          fetchElections(); // Refresh the list
+        } else {
+          alert("Failed to update status.");
+        }
+      } catch (err) {
+        console.error("Error updating status:", err);
+        alert("Failed to update status.");
+      }
+    }
+
+    function goBack() {
+      window.location.href = 'admin.html';
+    }
+
+    fetchElections();
+  </script>
+</body>
+</html>

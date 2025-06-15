@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Create Election</title>
+
+  <!-- SweetAlert2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+    .section {
+      max-width: 500px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .section h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 6px;
+      font-weight: bold;
+      color: #333;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #2c3e50;
+      color: white;
+      font-size: 17px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background-color: #34495e;
+    }
+    .back-btn {
+      background-color: #95a5a6;
+    }
+    .back-btn:hover {
+      background-color: #bdc3c7;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="section">
+    <h2>Create Election</h2>
+
+    <label for="title">Election Title</label>
+    <input type="text" id="title" placeholder="Enter election title" />
+
+    <label for="votingType">Voting Type</label>
+    <select id="votingType">
+      <option value="">-- Select Voting Type --</option>
+      <option value="area">Area-wise</option>
+      <option value="party">Party-wise</option>
+    </select>
+
+    <label for="position">Position</label>
+    <select id="position">
+      <option value="">-- Select Position --</option>
+      <option value="president">President</option>
+      <option value="secretary">Secretary</option>
+    </select>
+
+    <label for="electionDate">Election Date</label>
+    <input type="date" id="electionDate" />
+
+    <label for="startTime">Start Time</label>
+    <input type="time" id="startTime" />
+
+    <label for="endTime">End Time</label>
+    <input type="time" id="endTime" />
+
+    <button onclick="createElection()">Create Election</button>
+    <button class="back-btn" onclick="goBack()">Back to Admin Panel</button>
+  </div>
+
+  <!-- SweetAlert2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    window.onload = function () {
+      const params = new URLSearchParams(window.location.search);
+
+      if (params.get('from') === 'admin') {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'info',
+          title: 'Returned from Admin Panel',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
+      }
+
+      if (params.get('error')) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: 'Something went wrong!',
+          text: params.get('error'),
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
+      }
+    };
+
+    function createElection() {
+      const title = document.getElementById('title').value.trim();
+      const votingType = document.getElementById('votingType').value;
+      const position = document.getElementById('position').value;
+      const electionDate = document.getElementById('electionDate').value;
+      const startTime = document.getElementById('startTime').value;
+      const endTime = document.getElementById('endTime').value;
+
+      if (!title || !votingType || !position || !electionDate || !startTime || !endTime) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'warning',
+          title: 'Please fill in all the fields.',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
+        return;
+      }
+
+      const startDateTime = new Date(`${electionDate}T${startTime}`);
+      const endDateTime = new Date(`${electionDate}T${endTime}`);
+
+      if (startDateTime >= endDateTime) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'warning',
+          title: 'Start time must be before end time.',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
+        return;
+      }
+
+      const payload = {
+        title,
+        voting_type: votingType,
+        position, // New field
+        election_date: electionDate,
+        start_time: startTime,
+        end_time: endTime
+      };
+
+      fetch('/api/create_election', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: `Election "${title}" scheduled successfully.`,
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+          }).then(() => {
+            window.location.href = 'admin.html?from=createElection';
+          });
+        } else {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: 'Failed to Create',
+            text: data.message || 'Election title might already exist.',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+          });
+        }
+      })
+      .catch(error => {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: 'Something went wrong.',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
+        console.error('Error:', error);
+      });
+    }
+
+    function goBack() {
+      window.location.href = 'admin.html?from=createElection';
+    }
+  </script>
+
+</body>
+</html>

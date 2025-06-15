@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel - Approve/Reject Users</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 30px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 8px 16px;
+      background-color: #3498db;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: 500;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background: white;
+      border-radius: 10px;
+      padding: 15px 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .user-info {
+      margin-bottom: 10px;
+    }
+
+    .user-info div {
+      margin: 4px 0;
+      color: #333;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #2c3e50;
+      color: white;
+      font-size: 17px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+     button:hover {
+      background-color: #34495e;
+    }
+    .back-btn {
+      background-color: #95a5a6;
+    }
+    .back-btn:hover {
+      background-color: #bdc3c7;
+    }
+
+    .btn-group button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 5px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .approve {
+      background-color: #27ae60;
+      color: white;
+    }
+
+    .reject {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .no-users {
+      text-align: center;
+      font-style: italic;
+      color: #777;
+    }
+    /* Responsive */
+    @media (max-width: 480px) {
+      .candidate-info div {
+        flex-basis: 100%;
+      }
+      button {
+        flex-basis: 100%;
+      }
+      .back-btn {
+        align-self: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <h2>Pending User Approvals</h2>
+    <ul id="pendingList">
+      <li class="no-users">Loading users...</li>
+    </ul>
+       <button class="back-btn" onclick="goBack()">Back to Admin Panel</button>
+  </div>
+
+  <script>
+    async function loadPendingUsers() {
+      try {
+        const res = await fetch('http://localhost:5000/admin/pending');
+        const users = await res.json();
+        const list = document.getElementById("pendingList");
+        list.innerHTML = "";
+
+        if (users.length === 0) {
+          list.innerHTML = "<li class='no-users'>No pending users.</li>";
+          return;
+        }
+
+        users.forEach(user => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <div class="user-info">
+              <div><strong>Name:</strong> ${user.name}</div>
+              <div><strong>Email:</strong> ${user.email}</div>
+              <div><strong>Age:</strong> ${user.age}</div>
+              <div><strong>Phone:</strong> ${user.number || user.phone || 'N/A'}</div>
+            </div>
+            <div class="btn-group">
+              <button class="approve" onclick="approve('${user.email}')">Approve</button>
+              <button class="reject" onclick="reject('${user.email}')">Reject</button>
+            </div>
+          `;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        console.error("Error loading users:", err);
+        document.getElementById("pendingList").innerHTML = "<li class='no-users'>Error loading users.</li>";
+      }
+    }
+
+    async function approve(email) {
+      try {
+        const res = await fetch(`http://localhost:5000/admin/approve/${email}`, {
+          method: 'POST'
+        });
+        const data = await res.json();
+        Swal.fire({
+          icon: 'success',
+          title: 'Approved',
+          text: data.message || 'User approved',
+          timer: 2000,
+          toast: true,
+          position: 'top-end',
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
+        loadPendingUsers();
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to approve user',
+          timer: 2000,
+          toast: true,
+          position: 'top-end',
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
+        console.error(err);
+      }
+    }
+
+    async function reject(email) {
+      try {
+        const res = await fetch(`http://localhost:5000/admin/reject/${email}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        Swal.fire({
+          icon: 'success',
+          title: 'Rejected',
+          text: data.message || 'User rejected',
+          timer: 2000,
+          toast: true,
+          position: 'top-end',
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
+        loadPendingUsers();
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to reject user',
+          timer: 2000,
+          toast: true,
+          position: 'top-end',
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
+        console.error(err);
+      }
+    }
+    function goBack() {
+      window.location.href = 'admin.html?from=createElection';
+    }
+
+    window.onload = loadPendingUsers;
+  </script>
+
+</body>
+</html>

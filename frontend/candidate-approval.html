@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin - Approve/Reject Candidates</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    /* Reset & base */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 30px;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h2 {
+      margin-bottom: 25px;
+      color: #222;
+      font-weight: 700;
+      font-size: 28px;
+      text-align: center;
+      user-select: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+    }
+
+    /* Candidate Card */
+    .candidate-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+      padding: 20px 24px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: box-shadow 0.3s ease;
+    }
+    .candidate-card:hover {
+      box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    /* Candidate Info Row */
+    .candidate-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      font-size: 15px;
+      color: #555;
+    }
+
+    .candidate-info strong {
+      flex-basis: 100%;
+      font-size: 20px;
+      color: #111;
+      user-select: text;
+    }
+
+    .candidate-info div {
+      flex: 1 1 45%;
+      user-select: text;
+    }
+
+    /* Buttons Container */
+    .btn-group {
+      margin-top: 12px;
+      display: flex;
+      gap: 14px;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 7px;
+      border: none;
+      padding: 10px 20px;
+      font-size: 15px;
+      flex: 1 1 120px;
+      transition: background-color 0.25s ease;
+      user-select: none;
+    }
+
+    button.approve {
+      background-color: #27ae60;
+      color: white;
+      box-shadow: 0 3px 6px rgba(39, 174, 96, 0.5);
+    }
+    button.approve:hover {
+      background-color: #1e8746;
+      box-shadow: 0 4px 10px rgba(30, 135, 70, 0.7);
+    }
+
+    button.reject {
+      background-color: #e74c3c;
+      color: white;
+      box-shadow: 0 3px 6px rgba(231, 76, 60, 0.5);
+    }
+    button.reject:hover {
+      background-color: #b83226;
+      box-shadow: 0 4px 10px rgba(184, 50, 38, 0.7);
+    }
+
+    /* Back Button */
+    .back-btn {
+      margin-top: 30px;
+      align-self: flex-end;
+      background-color: #7f8c8d;
+      color: white;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 3px 6px rgba(127, 140, 141, 0.5);
+      transition: background-color 0.25s ease;
+      user-select: none;
+    }
+    .back-btn:hover {
+      background-color: #95a5a6;
+      box-shadow: 0 4px 10px rgba(149, 165, 166, 0.7);
+    }
+
+    /* Empty message */
+    .empty-message {
+      text-align: center;
+      font-style: italic;
+      font-size: 17px;
+      color: #999;
+      margin-top: 40px;
+      user-select: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .candidate-info div {
+        flex-basis: 100%;
+      }
+      button {
+        flex-basis: 100%;
+      }
+      .back-btn {
+        align-self: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Pending Candidate Approvals</h2>
+
+    <div id="candidatesList">
+      <p class="empty-message">Loading candidates...</p>
+    </div>
+
+    <button class="back-btn" onclick="goBack()">Back to Admin Panel</button>
+  </div>
+
+  <script>
+    const candidatesList = document.getElementById('candidatesList');
+
+    async function loadPendingCandidates() {
+      try {
+        const res = await fetch('http://localhost:5000/api/candidates/pending');
+        if (!res.ok) throw new Error('Failed to load candidates');
+        const candidates = await res.json();
+
+        if (!candidates.length) {
+          candidatesList.innerHTML = '<p class="empty-message">No pending candidates.</p>';
+          return;
+        }
+
+        candidatesList.innerHTML = '';
+
+        candidates.forEach(c => {
+          let id = c._id;
+          if (typeof id === 'object' && id.$oid) id = id.$oid;
+
+          const card = document.createElement('div');
+          card.className = 'candidate-card';
+
+          card.innerHTML = `
+            <div class="candidate-info">
+              <strong>${c.name}</strong>
+              <div><b>Party:</b> ${c.party || 'N/A'}</div>
+            </div>
+            <div class="btn-group">
+              <button class="approve" onclick="approveCandidate('${id}')">Approve</button>
+              <button class="reject" onclick="rejectCandidate('${id}')">Reject</button>
+            </div>
+          `;
+          candidatesList.appendChild(card);
+        });
+      } catch (err) {
+        console.error(err);
+        candidatesList.innerHTML = '<p class="empty-message">Failed to load candidates. Try refreshing.</p>';
+      }
+    }
+
+    async function approveCandidate(id) {
+      try {
+        const res = await fetch(`http://localhost:5000/api/candidates/approve/${id}`, { method: 'POST' });
+        const data = await res.json();
+        Swal.fire({
+          icon: 'success',
+          title: 'Approved',
+          text: data.message || 'Candidate approved',
+          timer: 2000,
+          toast: true,
+          position: 'top-end',
+          timerProgressBar: true,
+          showConfirmButton: false,
+        });
+        loadPendingCandidates();
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to approve candidate',
+          timer: 2500,
+          toast: true,
+          position: 'top-end',
+          timerProgressBar: true,
+          showConfirmButton: false,
+        });
+        console.error(err);
+      }
+    }
+
+    async function rejectCandidate(id) {
+      try {
+        const res = await fetch(`http://localhost:5000/api/candidates/reject/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        Swal.fire({
+          icon: 'success',
+          title: 'Rejected',
+          text: data.message || 'Candidate rejected',
+          timer: 2000,
+          toast: true,
+          position: 'top-end',
+          timerProgressBar: true,
+          showConfirmButton: false,
+        });
+        loadPendingCandidates();
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to reject candidate',
+          timer: 2500,
+          toast: true,
+          position: 'top-end',
+          timerProgressBar: true,
+          showConfirmButton: false,
+        });
+        console.error(err);
+      }
+    }
+
+    function goBack() {
+      window.location.href = 'admin.html?from=candidate-approval';
+    }
+
+    window.onload = loadPendingCandidates;
+  </script>
+</body>
+</html>

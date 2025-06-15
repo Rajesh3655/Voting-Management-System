@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Election Results</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body class="bg-light py-4">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="fw-bold">Election Results</h1>
+      <div class="d-flex gap-2">
+        <button class="btn btn-secondary" onclick="goBack()">Back to Panel</button>
+        <button class="btn btn-danger" onclick="downloadPDF()">Download Report</button>
+      </div>
+    </div>
+
+    <div id="loading" class="text-center text-secondary mb-3">Loading election results...</div>
+    <div id="result-container" class="row g-4"></div>
+  </div>
+
+  <script>
+    async function fetchElectionResults() {
+      try {
+        const res = await fetch("http://localhost:5000/api/get_all_election_results");
+        let elections = await res.json();
+
+        // Sort: declared/ended first, then live
+        elections.sort((a, b) => {
+          if (a.status === "ended" && b.status !== "ended") return -1;
+          if (a.status !== "ended" && b.status === "ended") return 1;
+          return 0;
+        });
+
+        renderResults(elections);
+        document.getElementById("loading").style.display = "none";
+      } catch (err) {
+        console.error("Failed to load election results:", err);
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("result-container").innerHTML =
+          "<div class='col-12 text-danger'>Error loading election results.</div>";
+      }
+    }
+
+    function renderResults(elections) {
+      const container = document.getElementById("result-container");
+      container.innerHTML = "";
+
+      if (elections.length === 0) {
+        container.innerHTML = "<div class='col-12'>No elections available.</div>";
+        return;
+      }
+
+      elections.forEach(election => {
+        const card = document.createElement("div");
+        card.className = "col-md-6";
+
+        const sortedCandidates = [...election.candidates].sort((a, b) => b.votes - a.votes);
+        const topCandidate = sortedCandidates[0];
+        const topCandidateId = topCandidate?._id;
+
+        const candidatesHTML = sortedCandidates.map(c => {
+          const isWinner =
+            election.status === "ended" &&
+            c._id === topCandidateId &&
+            c.votes === topCandidate.votes;
+
+          return `
+            <li class="list-group-item d-flex justify-content-between align-items-center
+              ${isWinner ? 'list-group-item-success fw-bold' : ''}">
+              ${c.name} (${c.party})
+              <span>
+                ${
+                  isWinner
+                    ? '<span class="badge bg-success me-2">🏆 Winner</span>'
+                    : ''
+                }
+                <span class="badge bg-primary rounded-pill">${c.votes}</span>
+              </span>
+            </li>
+          `;
+        }).join("");
+
+        card.innerHTML = `
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">${election.title}</h5>
+              <p><strong>Date:</strong> ${new Date(election.election_date).toLocaleDateString()}</p>
+              <span class="badge ${election.status === "ended" ? 'bg-dark' : 'bg-warning text-dark'} mb-2">
+                ${election.status === "ended" ? "Result Declared" : "Live Counting"}
+              </span>
+              <ul class="list-group mt-3">${candidatesHTML}</ul>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function downloadPDF() {
+      const element = document.getElementById("result-container");
+      const opt = {
+        margin: 0.5,
+        filename: `election-results.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
+      };
+      html2pdf().set(opt).from(element).save();
+    }
+
+    function goBack() {
+      window.location.href = "admin.html"; // Change to voter.html if needed
+    }
+
+    fetchElectionResults();
+  </script>
+</body>
+</html>
