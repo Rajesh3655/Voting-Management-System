@@ -820,7 +820,7 @@ def update_election_status_mm(election_id):
 
 # ========= SERVER =========
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
 
 #Developed  by Rajesh
 # contact: Rajesh3656r@gmail.com || 8217354109
