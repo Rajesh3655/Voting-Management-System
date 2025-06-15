@@ -1,68 +1,38 @@
 import os
-import re
-from datetime import datetime, UTC
+from datetime import datetime
 from bson import ObjectId
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_pymongo import PyMongo
-from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo import ASCENDING
 
-
+# Init Flask app
 app = Flask(__name__, static_folder="frontend", static_url_path="/")
-
-@app.route('/')
-def index():
-    return app.send_static_file('index.html')
-
-#
-#
-# app = Flask(__name__, static_folder='../frontend')
-# CORS(app)
-#
-# # MongoDB setup
-# app.config["MONGO_URI"] = "mongodb://localhost:27017/voting_system"
-# mongo = PyMongo(app)
-#
-# # Collections
-# db = mongo.db
-# users_collection = db["users"]
-# candidates_collection = db["candidates"]
-# elections_collection = db["elections"]
-# votes_collection = db["votes"]
-
-from flask import Flask
-from flask_pymongo import PyMongo
-from flask_cors import CORS
-
-app = Flask(__name__, static_folder='frontend', static_url_path='/')
 CORS(app)
 
-# MongoDB Atlas connection
-app.config["MONGO_URI"] = "mongodb+srv://rajesh3656r:h0w09iMnXKrTtp9Z@cluster0.w3hbcpb.mongodb.net/voting_system?retryWrites=true&w=majority"
-
+# Set Mongo URI from environment or fallback to local (for testing)
+app.config["MONGO_URI"] = os.environ.get("MONGO_URI") or "mongodb://localhost:27017/voting_system"
 mongo = PyMongo(app)
-app.config["MONGO_URI"] =   os.environ.get("MONGO_URI")
-# Access collections
+
+# Mongo collections
 db = mongo.db
 users_collection = db["users"]
 candidates_collection = db["candidates"]
 elections_collection = db["elections"]
 votes_collection = db["votes"]
 
-#Developed by Rajesh K
-#contact: Rajesh3656r@gmail.com || 8217354109
+# Create index
+users_collection.create_index("email", unique=True)
 
-# Utility
+# Utils
 def serialize(obj):
     if isinstance(obj, ObjectId):
         return str(obj)
-    if isinstance(obj, dict):
+    elif isinstance(obj, dict):
         return {k: serialize(v) for k, v in obj.items()}
-    if isinstance(obj, list):
+    elif isinstance(obj, list):
         return [serialize(i) for i in obj]
     return obj
-
 
 def election_status(election):
     now = datetime.utcnow()
@@ -73,20 +43,14 @@ def election_status(election):
     else:
         return "Live"
 
-
-users_collection.create_index("email", unique=True)
-
-
-# Serve frontend
+# Routes
 @app.route('/')
 def home():
     return send_from_directory(app.static_folder, 'index.html')
 
-
 @app.route('/<path:path>')
 def serve_static(path):
     return send_from_directory(app.static_folder, path)
-
 
 # ========= AUTH ROUTES =========
 
