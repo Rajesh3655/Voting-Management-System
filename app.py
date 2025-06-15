@@ -31,7 +31,7 @@ from flask import Flask
 from flask_pymongo import PyMongo
 from flask_cors import CORS
 
-app = Flask(__name__, static_folder='../frontend')
+app = Flask(__name__, static_folder='frontend', static_url_path='/')
 CORS(app)
 
 # MongoDB Atlas connection
