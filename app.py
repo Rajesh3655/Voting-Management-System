@@ -43,6 +43,10 @@ def election_status(election):
     else:
         return "Live"
 
+
+@app.route('/ping')
+def ping():
+    return "pong", 200
 # Routes
 @app.route('/')
 def home():
