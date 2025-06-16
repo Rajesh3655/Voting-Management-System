@@ -14,7 +14,7 @@ app.config["MONGO_URI"] = "mongodb+srv://rajesh3656r:h0w09iMnXKrTtp9Z@cluster0.w
 # Set Mongo URI from environment or fallback to local (for testing)
 
 mongo = PyMongo(app)
-
+app.config["MONGO_URI"] =   os.environ.get("MONGO_URI")
 # Mongo collections
 db = mongo.db
 users_collection = db["users"]
