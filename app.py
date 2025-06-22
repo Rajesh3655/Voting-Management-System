@@ -59,6 +59,11 @@ def home():
 def serve_static(path):
     return send_from_directory(app.static_folder, path)
 
+
+@app.route('/users', methods=['GET'])  # ← THIS is the important route!
+def get_users():
+    users = list(users_collection.find({}, {"_id": 0, "password": 0}))
+    return jsonify(users), 200
 # ========= AUTH ROUTES =========
 
 @app.route('/signup', methods=['POST'])
