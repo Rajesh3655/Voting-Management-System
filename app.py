@@ -9,20 +9,26 @@ from pymongo import ASCENDING
 # Init Flask app
 app = Flask(__name__, static_folder="frontend", static_url_path="/")
 CORS(app)
-app.config["MONGO_URI"] = "mongodb+srv://rajesh3656r:h0w09iMnXKrTtp9Z@cluster0.w3hbcpb.mongodb.net/voting_system?retryWrites=true&w=majority&appName=Cluster0"
-# mongodb+srv://rajesh3656r:h0w09iMnXKrTtp9Z@cluster0.w3hbcpb.mongodb.net/voting_system?retryWrites=true&w=majority
-# Set Mongo URI from environment or fallback to local (for testing)
 
+# Set MongoDB URI from environment or default to hardcoded URI
+app.config["MONGO_URI"] = os.environ.get(
+    "MONGO_URI",
+    "mongodb+srv://rajesh3656r:h0w09iMnXKrTtp9Z@cluster0.w3hbcpb.mongodb.net/voting_system?retryWrites=true&w=majority&appName=Cluster0"
+)
+
+# Initialize MongoDB client
 mongo = PyMongo(app)
-app.config["MONGO_URI"] =   os.environ.get("MONGO_URI")
-# Mongo collections
+
+# Get database
 db = mongo.db
+
+# Collections
 users_collection = db["users"]
 candidates_collection = db["candidates"]
 elections_collection = db["elections"]
 votes_collection = db["votes"]
 
-# Create index
+# Ensure unique email index in users
 users_collection.create_index("email", unique=True)
 
 # Utils
