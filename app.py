@@ -55,9 +55,7 @@ def ping():
 def home():
     return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/<path:path>')
-def serve_static(path):
-    return send_from_directory(app.static_folder, path)
+
 
 
 @app.route('/users', methods=['GET'])  # ← THIS is the important route!
@@ -797,6 +795,10 @@ def update_election_status_mm(election_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/<path:path>')
+def serve_static(path):
+    return send_from_directory(app.static_folder, path)
 
 # ========= SERVER =========
 
