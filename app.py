@@ -13,7 +13,7 @@ app = Flask(__name__, static_folder="frontend", static_url_path="/")
 CORS(app)
 
 # MongoDB Atlas connection
-app.config["MONGO_URI"] = "mongodb+srv://rajesh3656r:h0w09iMnXKrTtp9Z@cluster0.w3hbcpb.mongodb.net/voting_system?retryWrites=true&w=majority"
+# app.config["MONGO_URI"] = "mongodb+srv://rajesh3656r:h0w09iMnXKrTtp9Z@cluster0.w3hbcpb.mongodb.net/voting_system?retryWrites=true&w=majority"
 
 mongo = PyMongo(app)
 app.config["MONGO_URI"] =   os.environ.get("MONGO_URI")
