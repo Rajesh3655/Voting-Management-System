@@ -8,7 +8,8 @@ from pymongo import ASCENDING
 from werkzeug.security import generate_password_hash
 # Init Flask app
 
-app = Flask(__name__, static_folder='../frontend')
+app = Flask(__name__, static_folder="frontend", static_url_path="/")
+
 CORS(app)
 
 # MongoDB Atlas connection
