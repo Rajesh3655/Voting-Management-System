@@ -7,26 +7,22 @@ from flask_pymongo import PyMongo
 from pymongo import ASCENDING
 from werkzeug.security import generate_password_hash
 # Init Flask app
-app = Flask(__name__, static_folder="frontend", static_url_path="/")
+
+app = Flask(__name__, static_folder='../frontend')
 CORS(app)
 
-# Set MongoDB URI from environment or default to hardcoded URI
-app.config["MONGO_URI"] = os.environ.get(
-    "MONGO_URI",
-    "mongodb+srv://rajesh3656r:h0w09iMnXKrTtp9Z@cluster0.w3hbcpb.mongodb.net/voting_system?retryWrites=true&w=majority&appName=Cluster0"
-)
+# MongoDB Atlas connection
+app.config["MONGO_URI"] = "mongodb+srv://rajesh3656r:h0w09iMnXKrTtp9Z@cluster0.w3hbcpb.mongodb.net/voting_system?retryWrites=true&w=majority"
 
-# Initialize MongoDB client
 mongo = PyMongo(app)
-
-# Get database
+app.config["MONGO_URI"] =   os.environ.get("MONGO_URI")
+# Access collections
 db = mongo.db
-
-# Collections
 users_collection = db["users"]
 candidates_collection = db["candidates"]
 elections_collection = db["elections"]
 votes_collection = db["votes"]
+
 
 # Ensure unique email index in users
 users_collection.create_index("email", unique=True)
