@@ -4,4 +4,4 @@ flask-cors
 dnspython
 pytz
 gunicorn
-werkzeug.security
+werkzeug
