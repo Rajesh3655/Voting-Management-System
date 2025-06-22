@@ -9,8 +9,8 @@ from pymongo import ASCENDING
 # Init Flask app
 app = Flask(__name__, static_folder="frontend", static_url_path="/")
 CORS(app)
-app.config["MONGO_URI"] = "mongodb+srv://rajesh3656r:h0w09iMnXKrTtp9Z@cluster0.w3hbcpb.mongodb.net/voting_system?retryWrites=true&w=majority"
-
+app.config["MONGO_URI"] = "mongodb+srv://rajesh3656r:h0w09iMnXKrTtp9Z@cluster0.w3hbcpb.mongodb.net/voting_system?retryWrites=true&w=majority&appName=Cluster0"
+# mongodb+srv://rajesh3656r:h0w09iMnXKrTtp9Z@cluster0.w3hbcpb.mongodb.net/voting_system?retryWrites=true&w=majority
 # Set Mongo URI from environment or fallback to local (for testing)
 
 mongo = PyMongo(app)
