@@ -98,7 +98,7 @@
       }
 
       try {
-        const response = await fetch('http://voting-management-system-nrqx.onrender.com/signup', {
+        const response = await fetch('/signup', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -125,7 +125,7 @@
           setTimeout(() => {
             localStorage.setItem('user', JSON.stringify(data.user)); // Save user data if needed
             location.href = 'index.html'; // redirect to login page
-          }, 2100);
+          }, 2000);
         } else {
           Swal.fire({
             icon: 'error',
