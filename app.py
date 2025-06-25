@@ -117,9 +117,8 @@ def signup():
     users_collection.insert_one(user)
     return jsonify({"message": "User registered successfully"}), 201
 
-
 @app.route('/auth/login', methods=['POST'])
-def login():
+def voter_login():
     try:
         data = request.get_json()
         email = data.get('email', '').strip().lower()
