@@ -118,7 +118,7 @@ def signup():
     return jsonify({"message": "User registered successfully"}), 201
 
 @app.route('/auth/login', methods=['POST'])
-def voter_login():
+def login():
     try:
         data = request.get_json()
         email = data.get('email', '').strip().lower()
@@ -145,10 +145,8 @@ def voter_login():
         }), 200
 
     except Exception as e:
-        print(f"Login error: {str(e)}")  # For debugging in terminal or logs
+        print(f"Login error: {str(e)}")
         return jsonify({'message': 'Internal server error', 'error': str(e)}), 500
-
-
 # ========= ADMIN - VOTER MANAGEMENT =========
 
 @app.route('/admin/pending', methods=['GET'])
