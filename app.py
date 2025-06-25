@@ -86,7 +86,6 @@ def signup():
         age = int(age)
         if age < 18 or age > 120:
             raise ValueError
-
     except ValueError:
         return jsonify({"message": "Age must be a number between 18 and 120"}), 400
 
@@ -110,36 +109,30 @@ def signup():
     users_collection.insert_one(user)
     return jsonify({"message": "User registered successfully"}), 201
 
+
 @app.route('/auth/login', methods=['POST'])
 def login():
-    try:
-        data = request.get_json()
-        email = data.get('email', '').strip().lower()
-        password = data.get('password')
+    data = request.get_json()
+    email = data.get('email', '').strip().lower()
+    password = data.get('password')
 
-        if not email or not password:
-            return jsonify({'message': 'Email and password are required'}), 400
+    user = users_collection.find_one({'email': email})
+    if not user or not check_password_hash(user['password'], password):
+        return jsonify({'message': 'Invalid credentials'}), 401
 
-        user = users_collection.find_one({'email': email})
-        if not user or not check_password_hash(user['password'], password):
-            return jsonify({'message': 'Invalid credentials'}), 401
+    if not user.get('is_approved'):
+        return jsonify({'message': 'Account not approved yet'}), 403
 
-        if not user.get('is_approved', False):
-            return jsonify({'message': 'Account not approved yet'}), 403
+    return jsonify({
+        'message': 'Login successful',
+        'user': {
+            'id': str(user['_id']),
+            'email': user['email'],
+            'role': user.get('role', 'voter'),
+            'is_approved': True
+        }
+    }), 200
 
-        return jsonify({
-            'message': 'Login successful',
-            'user': {
-                'id': str(user['_id']),
-                'email': user['email'],
-                'role': user.get('role', 'voter'),
-                'is_approved': True
-            }
-        }), 200
-
-    except Exception as e:
-        print(f"Login error: {str(e)}")
-        return jsonify({'message': 'Internal server error', 'error': str(e)}), 500
 # ========= ADMIN - VOTER MANAGEMENT =========
 
 @app.route('/admin/pending', methods=['GET'])
