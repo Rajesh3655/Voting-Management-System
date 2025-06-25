@@ -86,13 +86,6 @@ def signup():
         age = int(age)
         if age < 18 or age > 120:
             raise ValueError
-    .catch(error => {
-  console.error('Login error:', error);  // Add this
-  Toast.fire({
-    icon: 'error',
-    title: 'An error occurred during login. Please try again later.'
-  });
-});
 
     except ValueError:
         return jsonify({"message": "Age must be a number between 18 and 120"}), 400
