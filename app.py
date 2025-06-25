@@ -86,6 +86,14 @@ def signup():
         age = int(age)
         if age < 18 or age > 120:
             raise ValueError
+    .catch(error => {
+  console.error('Login error:', error);  // Add this
+  Toast.fire({
+    icon: 'error',
+    title: 'An error occurred during login. Please try again later.'
+  });
+});
+
     except ValueError:
         return jsonify({"message": "Age must be a number between 18 and 120"}), 400
 
@@ -112,26 +120,34 @@ def signup():
 
 @app.route('/auth/login', methods=['POST'])
 def login():
-    data = request.get_json()
-    email = data.get('email', '').strip().lower()
-    password = data.get('password')
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip().lower()
+        password = data.get('password')
 
-    user = users_collection.find_one({'email': email})
-    if not user or not check_password_hash(user['password'], password):
-        return jsonify({'message': 'Invalid credentials'}), 401
+        if not email or not password:
+            return jsonify({'message': 'Email and password are required'}), 400
 
-    if not user.get('is_approved'):
-        return jsonify({'message': 'Account not approved yet'}), 403
+        user = users_collection.find_one({'email': email})
+        if not user or not check_password_hash(user['password'], password):
+            return jsonify({'message': 'Invalid credentials'}), 401
 
-    return jsonify({
-        'message': 'Login successful',
-        'user': {
-            'id': str(user['_id']),
-            'email': user['email'],
-            'role': user.get('role', 'voter'),
-            'is_approved': True
-        }
-    }), 200
+        if not user.get('is_approved', False):
+            return jsonify({'message': 'Account not approved yet'}), 403
+
+        return jsonify({
+            'message': 'Login successful',
+            'user': {
+                'id': str(user['_id']),
+                'email': user['email'],
+                'role': user.get('role', 'voter'),
+                'is_approved': True
+            }
+        }), 200
+
+    except Exception as e:
+        print(f"Login error: {str(e)}")  # For debugging in terminal or logs
+        return jsonify({'message': 'Internal server error', 'error': str(e)}), 500
 
 
 # ========= ADMIN - VOTER MANAGEMENT =========
