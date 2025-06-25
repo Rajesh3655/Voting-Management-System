@@ -169,7 +169,7 @@
 
     async function loadPendingCandidates() {
       try {
-        const res = await fetch('http://localhost:5000/api/candidates/pending');
+        const res = await fetch('https://voting-management-system-ue47.onrender.com/api/candidates/pending');
         if (!res.ok) throw new Error('Failed to load candidates');
         const candidates = await res.json();
 
@@ -207,7 +207,7 @@
 
     async function approveCandidate(id) {
       try {
-        const res = await fetch(`http://localhost:5000/api/candidates/approve/${id}`, { method: 'POST' });
+        const res = await fetch(`https://voting-management-system-ue47.onrender.com/candidates/approve/${id}`, { method: 'POST' });
         const data = await res.json();
         Swal.fire({
           icon: 'success',
@@ -237,7 +237,7 @@
 
     async function rejectCandidate(id) {
       try {
-        const res = await fetch(`http://localhost:5000/api/candidates/reject/${id}`, { method: 'DELETE' });
+        const res = await fetch(`https://voting-management-system-ue47.onrender.com/api/candidates/reject/${id}`, { method: 'DELETE' });
         const data = await res.json();
         Swal.fire({
           icon: 'success',
