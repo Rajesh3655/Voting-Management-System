@@ -25,7 +25,7 @@
   <script>
     async function fetchElectionResults() {
       try {
-        const res = await fetch("http://localhost:5000/api/get_all_election_results");
+        const res = await fetch("https://voting-management-system-ue47.onrender.com/api/get_all_election_results");
         let elections = await res.json();
 
         // Sort: declared/ended first, then live
