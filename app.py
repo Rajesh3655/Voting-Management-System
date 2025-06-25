@@ -6,6 +6,7 @@ from flask_cors import CORS
 from flask_pymongo import PyMongo
 from pymongo import ASCENDING
 from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash
 import re
 # Init Flask app
 
