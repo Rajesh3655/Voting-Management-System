@@ -131,7 +131,7 @@
   <script>
     async function loadPendingUsers() {
       try {
-        const res = await fetch('http://localhost:5000/admin/pending');
+        const res = await fetch('https://voting-management-system-ue47.onrender.com/admin/pending');
         const users = await res.json();
         const list = document.getElementById("pendingList");
         list.innerHTML = "";
@@ -165,7 +165,7 @@
 
     async function approve(email) {
       try {
-        const res = await fetch(`http://localhost:5000/admin/approve/${email}`, {
+        const res = await fetch(`https://voting-management-system-ue47.onrender.com/admin/approve/${email}`, {
           method: 'POST'
         });
         const data = await res.json();
@@ -197,7 +197,7 @@
 
     async function reject(email) {
       try {
-        const res = await fetch(`http://localhost:5000/admin/reject/${email}`, {
+        const res = await fetch(`https://voting-management-system-ue47.onrender.com/admin/reject/${email}`, {
           method: 'DELETE'
         });
         const data = await res.json();
