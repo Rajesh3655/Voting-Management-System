@@ -82,7 +82,7 @@
     window.onload = async function () {
       const dropdown = document.getElementById('electionsList');
       try {
-        const res = await fetch('http://localhost:5000/api/elections/list');
+        const res = await fetch('https://voting-management-system-ue47.onrender.com/api/elections/list');
         if (!res.ok) throw new Error('Server error while fetching elections');
 
         const elections = await res.json();
@@ -142,7 +142,7 @@
       }
 
       try {
-        const existingRes = await fetch(`http://localhost:5000/api/candidates/by-election/${electionId}`);
+        const existingRes = await fetch(`https://voting-management-system-ue47.onrender.com/api/candidates/by-election/${electionId}`);
         if (!existingRes.ok) throw new Error('Failed to fetch existing candidates');
 
         const existingCandidates = await existingRes.json();
@@ -166,7 +166,7 @@
           return;
         }
 
-        const res = await fetch('http://localhost:5000/api/candidates/add', {
+        const res = await fetch('https://voting-management-system-ue47.onrender.com/api/candidates/add', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
