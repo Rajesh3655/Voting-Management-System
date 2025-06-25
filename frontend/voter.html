@@ -138,7 +138,7 @@
 
     async function fetchVoterInfo() {
       try {
-        const res = await fetch("http://localhost:5000/api/get_voter_details/fetch", {
+        const res = await fetch("https://voting-management-system-ue47.onrender.com/api/get_voter_details/fetch", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: voter.email })
@@ -167,7 +167,7 @@
 
     async function fetchElections() {
       try {
-        const res = await fetch("http://localhost:5000/api/elections");
+        const res = await fetch("https://voting-management-system-ue47.onrender.com/api/elections");
         const elections = await res.json();
 
         const live = elections.filter(e => e.status === "live");
@@ -221,7 +221,7 @@
 
     async function openVoteModal(electionId) {
       try {
-        const res = await fetch(`http://localhost:5000/api/candidates/v/${electionId}`);
+        const res = await fetch(`https://voting-management-system-ue47.onrender.com/api/candidates/v/${electionId}`);
         const candidates = await res.json();
 
         if (!candidates.length) {
@@ -260,7 +260,7 @@
 
     async function castVote(electionId, candidateId) {
       try {
-        const res = await fetch("http://localhost:5000/api/vote/voter", {
+        const res = await fetch("https://voting-management-system-ue47.onrender.com/api/vote/voter", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
