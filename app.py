@@ -64,7 +64,7 @@ def home():
 
 
 
-@app.route('/users', methods=['GET'])  # ← THIS is the important route!
+@app.route('/abcd', methods=['GET'])  # ← THIS is the important route!
 def get_users():
     users = list(users_collection.find({}, {"_id": 0, "password": 0}))
     return jsonify(users), 200
