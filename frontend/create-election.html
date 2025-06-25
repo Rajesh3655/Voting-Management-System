@@ -178,7 +178,7 @@
         end_time: endTime
       };
 
-      fetch('/api/create_election', {
+      fetch('https://voting-management-system-ue47.onrender.com/api/create_election', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
